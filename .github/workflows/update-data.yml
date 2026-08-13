@@ -1,0 +1,44 @@
+name: Update Indeed data
+
+# Indeed Hiring Lab refreshes the tracker weekly, but not on a fixed weekday, so
+# check daily and commit only when the numbers actually move. Pushing to main
+# rebuilds the GitHub Pages site automatically.
+on:
+  schedule:
+    - cron: "0 12 * * *"      # 12:00 UTC daily
+  workflow_dispatch:           # ...and on demand from the Actions tab
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-data
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # build_data.py is stdlib-only, so there is nothing to install.
+      - name: Rebuild data.json
+        run: python build_data.py
+
+      - name: Commit if the data moved
+        run: |
+          if git diff --quiet -- data.json; then
+            echo "data.json unchanged — nothing to commit."
+            exit 0
+          fi
+          through=$(python -c "import json;print(json.load(open('data.json'))['dates'][-1])")
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data.json
+          git commit -m "Update Indeed data through ${through}"
+          git push
+          echo "Committed data through ${through}." >> "$GITHUB_STEP_SUMMARY"

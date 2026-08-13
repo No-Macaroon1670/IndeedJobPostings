@@ -1,0 +1,1646 @@
+<!doctype html>
+<html lang="en" data-theme="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Indeed Job Postings Index — US sector explorer</title>
+<style>
+  :root {
+    color-scheme: light;
+    --surface-1: #fcfcfb;
+    --plane: #f9f9f7;
+    --text-primary: #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted: #898781;
+    --grid: #e1e0d9;
+    --axis: #c3c2b7;
+    --border: rgba(11, 11, 11, 0.10);
+    --wash: rgba(11, 11, 11, 0.045);
+    --good: #006300;
+    --bad: #d03b3b;
+    --series-1: #2a78d6;
+    --series-2: #eb6834;
+    --series-3: #1baf7a;
+    --series-4: #eda100;
+    --series-5: #e87ba4;
+    --series-6: #008300;
+    --series-7: #4a3aa7;
+    --series-8: #e34948;
+    --other: #898781;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) {
+      color-scheme: dark;
+      --surface-1: #1a1a19;
+      --plane: #0d0d0d;
+      --text-primary: #ffffff;
+      --text-secondary: #c3c2b7;
+      --text-muted: #898781;
+      --grid: #2c2c2a;
+      --axis: #383835;
+      --border: rgba(255, 255, 255, 0.10);
+      --wash: rgba(255, 255, 255, 0.06);
+      --good: #0ca30c;
+      --bad: #e66767;
+      --series-1: #3987e5;
+      --series-2: #d95926;
+      --series-3: #199e70;
+      --series-4: #c98500;
+      --series-5: #d55181;
+      --series-6: #008300;
+      --series-7: #9085e9;
+      --series-8: #e66767;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --surface-1: #1a1a19;
+    --plane: #0d0d0d;
+    --text-primary: #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted: #898781;
+    --grid: #2c2c2a;
+    --axis: #383835;
+    --border: rgba(255, 255, 255, 0.10);
+    --wash: rgba(255, 255, 255, 0.06);
+    --good: #0ca30c;
+    --bad: #e66767;
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --series-3: #199e70;
+    --series-4: #c98500;
+    --series-5: #d55181;
+    --series-6: #008300;
+    --series-7: #9085e9;
+    --series-8: #e66767;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--plane);
+    color: var(--text-primary);
+    font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3 { margin: 0; font-weight: 600; }
+  button, select, input { font: inherit; color: inherit; }
+
+  .page { max-width: 1500px; margin: 0 auto; padding: 24px 24px 56px; }
+
+  header.top { display: flex; align-items: flex-start; gap: 20px; flex-wrap: wrap; margin-bottom: 20px; }
+  header.top .titles { flex: 1 1 380px; min-width: 0; }
+  h1 { font-size: 22px; letter-spacing: -0.01em; }
+  .sub { color: var(--text-secondary); font-size: 13px; margin-top: 5px; }
+  .sub a { color: inherit; }
+  .head-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+  /* --- controls --- */
+  .btn {
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 7px;
+    padding: 6px 11px; cursor: pointer; color: var(--text-secondary); white-space: nowrap;
+  }
+  .btn:hover { background: var(--wash); color: var(--text-primary); }
+  .btn:active { transform: translateY(0.5px); }
+  .btn[disabled] { opacity: 0.5; cursor: default; }
+  .btn.small { padding: 3px 8px; font-size: 12px; border-radius: 6px; }
+
+  .filters {
+    display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: flex-end;
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px;
+    padding: 12px 14px; margin-bottom: 16px;
+  }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field > label, .lbl {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--text-muted); font-weight: 600;
+  }
+  .seg { display: inline-flex; background: var(--plane); border: 1px solid var(--border); border-radius: 8px; padding: 2px; }
+  .seg button {
+    background: none; border: 0; border-radius: 6px; padding: 4px 10px; cursor: pointer;
+    color: var(--text-secondary); white-space: nowrap;
+  }
+  .seg button:hover { background: var(--wash); }
+  .seg button[aria-pressed="true"] { background: var(--surface-1); color: var(--text-primary); font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,0.08); }
+  select, input[type="date"], input[type="search"] {
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px;
+    padding: 5px 8px; min-width: 0;
+  }
+  [hidden] { display: none !important; }
+  .checkline { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; color: var(--text-secondary); }
+  .checkline input { accent-color: var(--series-1); }
+  .spacer { flex: 1 1 auto; }
+
+  /* --- layout --- */
+  .layout { display: grid; grid-template-columns: 272px minmax(0, 1fr); gap: 16px; align-items: start; }
+
+  .card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; }
+
+  /* --- picker --- */
+  .picker { padding: 12px; position: sticky; top: 16px; max-height: calc(100vh - 32px); display: flex; flex-direction: column; }
+  .picker-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+  .picker-head h2 { font-size: 13px; }
+  .count { font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+  .picker input[type="search"] { width: 100%; margin-bottom: 8px; }
+  .picker-actions { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
+  .grouplist { overflow-y: auto; flex: 1 1 auto; margin: 0 -4px; padding: 0 4px; }
+  .group { margin-bottom: 10px; }
+  .group-head { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 3px; }
+  .group-head h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); }
+  .opt {
+    display: flex; align-items: center; gap: 8px; padding: 3px 6px; border-radius: 6px;
+    cursor: pointer; line-height: 1.35;
+  }
+  .opt:hover, .opt.hot { background: var(--wash); }
+  .opt input { margin: 0; accent-color: var(--series-1); flex: none; }
+  .opt .swatch { width: 12px; height: 2px; border-radius: 1px; flex: none; background: transparent; }
+  .opt .nm { font-size: 13px; min-width: 0; overflow-wrap: anywhere; }
+  .opt.on .nm { color: var(--text-primary); }
+  .opt .nm { color: var(--text-secondary); }
+
+  /* --- chart --- */
+  .viewbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+  .chart-wrap { position: relative; padding: 14px; }
+  .chart-wrap.loading { opacity: 0.45; transition: opacity 0.15s; }
+  canvas { display: block; width: 100%; touch-action: none; }
+  canvas:focus-visible { outline: 2px solid var(--series-1); outline-offset: 2px; border-radius: 6px; }
+  .caption { padding: 0 14px 14px; color: var(--text-muted); font-size: 12px; }
+
+  .tooltip {
+    position: absolute; pointer-events: none; z-index: 5; min-width: 150px; max-width: 280px;
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 9px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.16); padding: 8px 10px; opacity: 0;
+    transition: opacity 0.08s;
+  }
+  .tooltip.show { opacity: 1; }
+  .tt-date { font-size: 11px; color: var(--text-muted); margin-bottom: 5px; font-variant-numeric: tabular-nums; }
+  .tt-row { display: flex; align-items: baseline; gap: 7px; padding: 1px 0; }
+  .tt-key { width: 12px; height: 2px; border-radius: 1px; flex: none; position: relative; top: -3px; }
+  .tt-val { font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .tt-name { color: var(--text-secondary); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 4px 16px; padding: 0 14px 14px; }
+  .lg { display: flex; align-items: center; gap: 7px; font-size: 13px; background: none; border: 0; padding: 2px 6px; margin: 0 -6px; border-radius: 6px; cursor: pointer; }
+  .lg:hover, .lg.hot { background: var(--wash); }
+  .lg:hover .lg-name, .lg.hot .lg-name { color: var(--text-primary); }
+  .lg-key { width: 14px; height: 2px; border-radius: 1px; flex: none; }
+  .lg-name { color: var(--text-secondary); }
+  .lg-val { font-variant-numeric: tabular-nums; color: var(--text-primary); font-weight: 600; }
+
+  .notice { margin: 0 14px 14px; padding: 8px 10px; border-radius: 8px; background: var(--wash); color: var(--text-secondary); font-size: 12px; }
+
+  /* --- table --- */
+  .tablewrap { overflow-x: auto; padding: 4px 14px 14px; }
+  table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+  th, td { text-align: right; padding: 7px 10px; white-space: nowrap; border-bottom: 1px solid var(--grid); }
+  th:first-child, td:first-child { text-align: left; }
+  thead th {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted);
+    font-weight: 600; cursor: pointer; user-select: none; position: sticky; top: 0; background: var(--surface-1);
+  }
+  thead th:hover { color: var(--text-primary); }
+  th .arrow { color: var(--text-primary); }
+  td.name { display: flex; align-items: center; gap: 8px; }
+  td .key { width: 12px; height: 2px; border-radius: 1px; flex: none; }
+  .pos { color: var(--good); }
+  .neg { color: var(--bad); }
+  tbody tr:hover { background: var(--wash); }
+
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  footer.foot { margin-top: 22px; color: var(--text-muted); font-size: 12px; line-height: 1.6; }
+  footer.foot a { color: var(--text-secondary); }
+
+  /* Narrow screens — must come last so these win on source order. */
+  @media (max-width: 900px) {
+    .page { padding: 16px 14px 40px; }
+    .layout { grid-template-columns: 1fr; }
+    /* A sticky, full-height 42-row picker would bury the chart below the fold. */
+    .picker { position: static; max-height: none; }
+    .grouplist { max-height: 240px; flex: none; }
+    .viewbar .count { display: none; }
+    .filters { gap: 8px 14px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="top">
+    <div class="titles">
+      <h1>Indeed Job Postings Index — US sectors</h1>
+      <p class="sub">
+        Seasonally adjusted, national, daily. <strong>Feb 1 2020 = 100</strong>, seven-day trailing average.
+        Source: <a href="https://github.com/hiring-lab/job_postings_tracker" target="_blank" rel="noopener">Indeed Hiring Lab</a>.
+        <span id="meta"></span>
+      </p>
+    </div>
+    <div class="head-actions">
+      <button class="btn" id="refresh" title="Re-download the latest CSVs from Indeed Hiring Lab (~11 MB)">Refresh from source</button>
+      <button class="btn" id="csv">Download CSV</button>
+      <button class="btn" id="theme" aria-label="Toggle colour theme">Theme</button>
+    </div>
+  </header>
+
+  <!-- one filter row, scoping everything below -->
+  <div class="filters" role="group" aria-label="Chart controls">
+    <div class="field">
+      <span class="lbl">Date range</span>
+      <div class="seg" id="range-presets"></div>
+    </div>
+    <div class="field">
+      <label class="lbl" for="from">From</label>
+      <input type="date" id="from">
+    </div>
+    <div class="field">
+      <label class="lbl" for="to">To</label>
+      <input type="date" id="to">
+    </div>
+    <div class="field">
+      <span class="lbl">Postings</span>
+      <div class="seg" id="variable"></div>
+    </div>
+    <div class="field">
+      <label class="lbl" for="transform">Measure</label>
+      <select id="transform">
+        <option value="level">Index level (Feb 2020 = 100)</option>
+        <option value="rebase">Rebased to range start (= 100)</option>
+        <option value="chg1m">Change vs 1 month ago (%)</option>
+        <option value="chg3m">Change vs 3 months ago (%)</option>
+        <option value="chg12m">Change vs 12 months ago (%)</option>
+        <option value="cumul">Cumulative % vs a flat 100 baseline</option>
+      </select>
+    </div>
+    <div class="field">
+      <label class="lbl" for="smooth">Smoothing</label>
+      <select id="smooth">
+        <option value="1">None (7-day avg as published)</option>
+        <option value="28">28-day trailing average</option>
+        <option value="91">91-day trailing average</option>
+        <option value="182">182-day trailing average</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="layout">
+
+    <!-- series picker -->
+    <aside class="card picker">
+      <div class="picker-head">
+        <h2>Sectors</h2>
+        <span class="count" id="pickcount"></span>
+      </div>
+      <input type="search" id="search" placeholder="Filter sectors…" aria-label="Filter sectors">
+      <div class="picker-actions">
+        <button class="btn small" data-preset="default">Reset</button>
+        <button class="btn small" data-preset="all">Select all</button>
+        <button class="btn small" data-preset="none">Clear</button>
+      </div>
+      <div class="grouplist" id="grouplist"></div>
+    </aside>
+
+    <!-- chart -->
+    <main class="card">
+      <div class="viewbar">
+        <div class="seg" id="view"></div>
+        <label class="checkline" id="sharedy-wrap" hidden><input type="checkbox" id="sharedy" checked> Shared y-axis</label>
+        <span class="spacer"></span>
+        <span class="count" id="hint">Drag on the chart to zoom · double-click to reset</span>
+      </div>
+
+      <div id="panel"></div>
+    </main>
+  </div>
+
+  <footer class="foot">
+    <p>
+      The index is the percentage change in seasonally adjusted job postings relative to Feb 1 2020, using a seven-day
+      trailing average — a reading of 112 means postings are 12% above the pre-pandemic baseline. Indeed seasonally
+      adjusts every series separately (Bundesbank daily-series method, adopted Nov 2024); history is revised on each
+      refresh. Sectors are Indeed's own categorisation of normalised job titles. Only sectors Indeed still publishes
+      appear here — discontinued series drop out automatically whenever the data is rebuilt.
+    </p>
+  </footer>
+</div>
+
+<script>
+"use strict";
+
+// ---------------------------------------------------------------- constants
+const CSV_BASE = "https://raw.githubusercontent.com/hiring-lab/job_postings_tracker/master/US";
+const SLOTS = 8;                       // categorical hues, assigned in fixed order, never cycled
+const RANGES = [
+  { id: "all",  label: "All" },
+  { id: "5y",   label: "5Y",  months: 60 },
+  { id: "3y",   label: "3Y",  months: 36 },
+  { id: "12m",  label: "12M", months: 12 },
+  { id: "6m",   label: "6M",  months: 6 },
+  { id: "ytd",  label: "YTD" },
+];
+const VARIABLES = [
+  { id: "total", label: "Total" },
+  { id: "new",   label: "New" },
+];
+const VIEWS = [
+  { id: "overlay", label: "Overlay" },
+  { id: "facets",  label: "Small multiples" },
+  { id: "table",   label: "Table" },
+];
+const TRANSFORMS = {
+  level:  { label: "Index (Feb 2020 = 100)",       pct: false, ref: 100 },
+  rebase: { label: "Rebased, range start = 100",   pct: false, ref: 100 },
+  chg1m:  { label: "% vs 1 month ago",             pct: true,  ref: 0, lag: 30 },
+  chg3m:  { label: "% vs 3 months ago",            pct: true,  ref: 0, lag: 91 },
+  chg12m: { label: "% vs 12 months ago",           pct: true,  ref: 0, lag: 365 },
+  // Running area between the line and the 100 baseline, divided by the days it
+  // spans. Because the counterfactual baseline is exactly 100, area/(100*days)*100
+  // reduces to area/days — so this reads directly as a percent.
+  cumul:  { label: "Cumulative % vs a flat 100",   pct: true,  ref: 0 },
+};
+const DEFAULT_IDS = ["national", "software-development", "banking-finance", "nursing", "retail"];
+
+// ---------------------------------------------------------------- state
+let DATA = null;                 // { dates, series, ... }
+let byId = new Map();
+let times = [];                  // dates as epoch ms, parallel to DATA.dates
+
+const state = {
+  selected: [],                  // series ids, in selection order
+  slots: new Map(),              // id -> 0..7 (colour slot) or undefined for "Other"
+  variable: "total",
+  transform: "level",
+  smooth: 1,
+  view: "overlay",
+  preset: "all",
+  from: null,                    // ISO string or null
+  to: null,
+  sharedY: true,
+  sort: { key: "name", dir: 1 },
+  search: "",
+  hover: null,                   // series id currently emphasised on the chart
+};
+
+// ---------------------------------------------------------------- helpers
+const $ = (sel) => document.querySelector(sel);
+const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+const colorOf = (id) => {
+  const s = state.slots.get(id);
+  return s === undefined ? css("--other") : css(`--series-${s + 1}`);
+};
+const isOther = (id) => state.slots.get(id) === undefined;
+
+function fmtNum(v, dp = 1) {
+  if (v === null || v === undefined || !isFinite(v)) return "—";
+  return v.toLocaleString("en-US", { minimumFractionDigits: dp, maximumFractionDigits: dp });
+}
+function fmtVal(v, tf) {
+  if (v === null || v === undefined || !isFinite(v)) return "—";
+  const t = TRANSFORMS[tf];
+  const n = fmtNum(v, t.dp ?? 1);
+  return t.pct ? (v > 0 ? "+" : "") + n + "%" : n;
+}
+
+/** Axis-tick text for the current measure. */
+function fmtTick(v, tf) {
+  const t = TRANSFORMS[tf];
+  return t.pct ? (v > 0 ? "+" : "") + fmtNum(v, 0) + "%" : fmtNum(v, 0);
+}
+const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+function fmtDate(iso) {
+  const [y, m, d] = iso.split("-");
+  return `${MONTHS[+m - 1]} ${+d}, ${y}`;
+}
+const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+
+// ---------------------------------------------------------------- transforms
+/** Trailing moving average over the raw index. */
+function smoothed(raw, win) {
+  if (win <= 1) return raw;
+  const out = new Array(raw.length).fill(null);
+  let sum = 0, n = 0;
+  const q = [];
+  for (let i = 0; i < raw.length; i++) {
+    const v = raw[i];
+    q.push(v);
+    if (v !== null) { sum += v; n++; }
+    if (q.length > win) { const old = q.shift(); if (old !== null) { sum -= old; n--; } }
+    out[i] = q.length === win && n === win ? sum / n : null;
+  }
+  return out;
+}
+
+/** Apply the measure transform to a smoothed level series. i0 = first visible index. */
+function transformed(level, tf, i0) {
+  const n = level.length;
+  const out = new Array(n).fill(null);
+  if (tf === "level") return level;
+  if (tf === "cumul") {
+    // Trapezoid rule on a 1-day grid from the first plotted day, divided by the days
+    // spanned so far: "cumulative postings ran x% above/below a flat-100 baseline".
+    // Nulls (from smoothing or a lag) simply delay the start; see CUMUL_NOTE.
+    let acc = 0, prev = null, days = 0;
+    for (let i = i0; i < n; i++) {
+      const v = level[i];
+      if (v === null || !isFinite(v)) continue;
+      if (prev !== null) { acc += ((prev - 100) + (v - 100)) / 2; days++; }
+      out[i] = days ? acc / days : 0;
+      prev = v;
+    }
+    return out;
+  }
+  if (tf === "rebase") {
+    let base = null;
+    for (let i = i0; i < n && base === null; i++) base = level[i];
+    if (!base) return out;
+    for (let i = 0; i < n; i++) out[i] = level[i] === null ? null : (level[i] / base) * 100;
+    return out;
+  }
+  const lag = TRANSFORMS[tf].lag;
+  for (let i = lag; i < n; i++) {
+    const a = level[i], b = level[i - lag];
+    out[i] = a === null || b === null || b === 0 ? null : (a / b - 1) * 100;
+  }
+  return out;
+}
+
+/**
+ * CUMUL_NOTE — the running area starts at the first plotted day, but smoothing and
+ * the lag measures blank the leading days, so accumulation can begin later than the
+ * window start. Say so rather than letting the reader assume otherwise.
+ */
+function cumulNote(seriesList, i0, i1) {
+  if (state.transform !== "cumul") return "";
+  let first = null;
+  for (const s of seriesList) {
+    for (let i = i0; i <= i1; i++) {
+      if (s.values[i] === null || !isFinite(s.values[i])) continue;
+      if (first === null || i < first) first = i;
+      break;
+    }
+  }
+  return first === null ? "" : ` · area accumulated from ${fmtDate(DATA.dates[first])}`;
+}
+
+/** Cached per-render series computation. */
+function computeSeries(ids, i0) {
+  return ids.map((id) => {
+    const s = byId.get(id);
+    const lvl = smoothed(s[state.variable], state.smooth);
+    return { id, name: s.name, short: s.short, values: transformed(lvl, state.transform, i0) };
+  });
+}
+
+// ---------------------------------------------------------------- date range
+function windowIndices() {
+  const dates = DATA.dates;
+  let lo = 0, hi = dates.length - 1;
+  if (state.from) { while (lo < hi && dates[lo] < state.from) lo++; }
+  if (state.to)   { while (hi > lo && dates[hi] > state.to) hi--; }
+  return [lo, hi];
+}
+
+function applyPreset(id) {
+  state.preset = id;
+  const dates = DATA.dates;
+  const last = dates[dates.length - 1];
+  if (id === "all") { state.from = null; state.to = null; return; }
+  state.to = last;
+  if (id === "ytd") { state.from = last.slice(0, 4) + "-01-01"; return; }
+  const months = RANGES.find((r) => r.id === id).months;
+  const d = new Date(last + "T00:00:00Z");
+  d.setUTCMonth(d.getUTCMonth() - months);
+  state.from = d.toISOString().slice(0, 10);
+  if (state.from < dates[0]) state.from = dates[0];
+}
+
+// ---------------------------------------------------------------- colour slots
+/** Keep every already-coloured series on its slot; fill free slots in selection order. */
+function reassignSlots() {
+  const live = new Set(state.selected);
+  for (const id of [...state.slots.keys()]) if (!live.has(id)) state.slots.delete(id);
+  const used = new Set(state.slots.values());
+  for (const id of state.selected) {
+    if (state.slots.has(id)) continue;
+    let free = -1;
+    for (let s = 0; s < SLOTS; s++) if (!used.has(s)) { free = s; break; }
+    if (free === -1) break;                   // beyond 8 → folded into "Other"
+    state.slots.set(id, free);
+    used.add(free);
+  }
+}
+
+// ---------------------------------------------------------------- hover emphasis
+let facetCtx = null;
+let hoverFrame = 0;
+
+/** Resolve state.hover against what's on the chart. Null when nothing is hovered. */
+function focusedSeries(plottedSeries) {
+  const id = state.hover;
+  if (!id || !byId.has(id)) return null;
+  const hit = plottedSeries.find((s) => s.id === id);
+  if (hit) {
+    // A grey "Other" line needs a colour it can actually be picked out in.
+    return { id, s: hit, plotted: true, color: isOther(id) ? css("--text-secondary") : colorOf(id) };
+  }
+  const [i0] = windowIndices();
+  return { id, s: computeSeries([id], i0)[0], plotted: false, color: css("--text-secondary") };
+}
+
+/** A pill label for the focused line, for when there is no gutter to write in. */
+function drawTag(ctx, text, xRight, y, color) {
+  const padX = 6, h = 17;
+  const w = ctx.measureText(text).width;
+  const x = Math.max(2, xRight - w - padX * 2);
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(x, y - h / 2, w + padX * 2, h, 5);
+  else ctx.rect(x, y - h / 2, w + padX * 2, h);
+  ctx.fillStyle = css("--surface-1");
+  ctx.fill();
+  ctx.strokeStyle = css("--border");
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.textAlign = "left";
+  ctx.fillStyle = color;
+  ctx.fillText(text, x + padX, y);
+}
+
+function repaintChart() {
+  if (state.view === "overlay" && overlayCtx && overlayCtx.refresh) overlayCtx.refresh();
+  else if (state.view === "facets" && facetCtx) facetCtx.refresh();
+}
+
+/** Mirror the emphasis onto every list that names the same sector. */
+function markHoverRows() {
+  for (const el of document.querySelectorAll("[data-series]")) {
+    el.classList.toggle("hot", el.dataset.series === state.hover);
+  }
+}
+
+function setHover(id) {
+  if (state.hover === id) return;
+  state.hover = id;
+  markHoverRows();
+  if (hoverFrame) return;
+  hoverFrame = requestAnimationFrame(() => { hoverFrame = 0; repaintChart(); });
+}
+
+/** Pointer and keyboard focus both emphasise — the chart never needs a mouse. */
+function bindHover(el, id) {
+  el.dataset.series = id;
+  el.addEventListener("pointerenter", () => setHover(id));
+  el.addEventListener("pointerleave", () => setHover(null));
+  el.addEventListener("focusin", () => setHover(id));
+  el.addEventListener("focusout", () => setHover(null));
+}
+
+function toggle(id, on) {
+  const at = state.selected.indexOf(id);
+  if (on && at === -1) state.selected.push(id);
+  if (!on && at !== -1) state.selected.splice(at, 1);
+  reassignSlots();
+  render();
+}
+
+// ================================================================ chart core
+const AXIS_FONT = '11px system-ui, -apple-system, "Segoe UI", sans-serif';
+
+function niceTicks(lo, hi, target) {
+  if (!isFinite(lo) || !isFinite(hi) || lo === hi) return [lo];
+  const raw = (hi - lo) / target;
+  const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const norm = raw / mag;
+  const step = (norm < 1.5 ? 1 : norm < 3 ? 2 : norm < 7 ? 5 : 10) * mag;
+  const out = [];
+  for (let v = Math.ceil(lo / step) * step; v <= hi + step * 1e-9; v += step) out.push(+v.toFixed(10));
+  return out;
+}
+
+const MONTH_STRIDES = [1, 2, 3, 6, 12, 24, 60];
+
+/** X ticks on calendar boundaries — January-only for long spans, quarters, months, or days. */
+function xTicks(i0, i1, target) {
+  const dates = DATA.dates;
+  const starts = [];
+  for (let i = i0; i <= i1; i++) {
+    if (dates[i].slice(8) !== "01") continue;
+    const [y, m] = dates[i].split("-");
+    starts.push({ i, y: +y, m: +m });
+  }
+
+  if (starts.length >= 2) {
+    let stride = MONTH_STRIDES.find((s) => starts.length / s <= target) ?? 120;
+    let picked = [];
+    // Snap to calendar boundaries; step down if a coarse stride leaves too few ticks.
+    while (stride >= 1) {
+      picked = starts.filter((t) => ((t.y * 12 + t.m - 1) % stride) === 0);
+      if (picked.length >= 2 || stride === 1) break;
+      stride = MONTH_STRIDES[MONTH_STRIDES.indexOf(stride) - 1] ?? 1;
+    }
+    return picked.map((t, k) => ({
+      i: t.i,
+      label: stride >= 12 ? String(t.y)
+        : t.m === 1 || k === 0 ? `${MONTHS[t.m - 1]} ’${String(t.y).slice(2)}`
+        : MONTHS[t.m - 1],
+    }));
+  }
+
+  // Sub-two-month window (only reachable by zooming): label individual days.
+  const n = clamp(i1 - i0 + 1, 2, target);
+  const out = [];
+  for (let k = 0; k < n; k++) {
+    const i = i0 + Math.round((k * (i1 - i0)) / (n - 1));
+    const [, m, d] = dates[i].split("-");
+    out.push({ i, label: `${MONTHS[+m - 1]} ${+d}` });
+  }
+  return out;
+}
+
+/** Truncate to fit — canvas maxWidth squashes glyphs horizontally instead. */
+function fitText(ctx, text, maxW) {
+  if (ctx.measureText(text).width <= maxW) return text;
+  let s = text;
+  while (s.length > 1 && ctx.measureText(s + "…").width > maxW) s = s.slice(0, -1);
+  return s.trimEnd() + "…";
+}
+
+function setupCanvas(canvas, cssW, cssH) {
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = Math.round(cssW * dpr);
+  canvas.height = Math.round(cssH * dpr);
+  canvas.style.height = cssH + "px";
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, cssW, cssH);
+  return ctx;
+}
+
+/** Shared scale maker. */
+function makeScales(box, i0, i1, lo, hi) {
+  const xs = (i) => box.x + ((i - i0) / Math.max(1, i1 - i0)) * box.w;
+  const ys = (v) => box.y + box.h - ((v - lo) / (hi - lo)) * box.h;
+  return { xs, ys };
+}
+
+function extent(seriesList, i0, i1) {
+  let lo = Infinity, hi = -Infinity;
+  for (const s of seriesList) {
+    for (let i = i0; i <= i1; i++) {
+      const v = s.values[i];
+      if (v === null || !isFinite(v)) continue;
+      if (v < lo) lo = v;
+      if (v > hi) hi = v;
+    }
+  }
+  if (!isFinite(lo)) return [0, 1];
+  if (lo === hi) { lo -= 1; hi += 1; }
+  const pad = (hi - lo) * 0.08;
+  return [lo - pad, hi + pad];
+}
+
+function drawLine(ctx, s, i0, i1, xs, ys, color, width) {
+  ctx.strokeStyle = color;
+  ctx.lineWidth = width;
+  ctx.lineJoin = "round";
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  let pen = false;
+  const step = Math.max(1, Math.floor((i1 - i0) / 4000));
+  for (let i = i0; i <= i1; i += step) {
+    const v = s.values[i];
+    if (v === null || !isFinite(v)) { pen = false; continue; }
+    const x = xs(i), y = ys(v);
+    if (!pen) { ctx.moveTo(x, y); pen = true; } else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+}
+
+// ================================================================ overlay view
+let overlayCtx = null;   // { canvas, box, i0, i1, xs, ys, series, lo, hi }
+
+function renderOverlay(panel) {
+  const [i0, i1] = windowIndices();
+  const ids = state.selected;
+
+  panel.innerHTML = "";
+  const wrap = document.createElement("div");
+  wrap.className = "chart-wrap";
+  const canvas = document.createElement("canvas");
+  canvas.tabIndex = 0;
+  canvas.setAttribute("role", "img");
+  const tip = document.createElement("div");
+  tip.className = "tooltip";
+  wrap.append(canvas, tip);
+  panel.append(wrap);
+
+  if (!ids.length) {
+    wrap.style.minHeight = "200px";
+    const p = document.createElement("p");
+    p.className = "notice";
+    p.textContent = "Pick one or more sectors on the left to plot them.";
+    panel.append(p);
+    return;
+  }
+
+  const series = computeSeries(ids, i0);
+  const tf = TRANSFORMS[state.transform];
+
+  const cssW = wrap.clientWidth - 28;
+  const narrow = cssW < 460;
+  const nColoured = series.filter((s) => !isOther(s.id)).length;
+  const labelPad = !narrow && nColoured <= 4 && nColoured === series.length ? 118 : 14;
+  const gutter = narrow ? 40 : 56;
+  const box = { x: gutter, y: 12, w: Math.max(120, cssW - gutter - labelPad), h: narrow ? 280 : 372 };
+  const cssH = box.y + box.h + 26;
+
+  const [lo, hi] = extent(series, i0, i1);
+  const { xs, ys } = makeScales(box, i0, i1, lo, hi);
+
+  const lastPoint = (s) => {
+    for (let i = i1; i >= i0; i--) if (s.values[i] !== null && isFinite(s.values[i])) return i;
+    return null;
+  };
+
+  // Chart minus any emphasis. Rendered once per layer and then blitted, so
+  // hovering down a 42-row list costs one drawImage plus a single line.
+  function drawBase(ctx, dim) {
+    // grid + y axis
+    const ticks = niceTicks(lo, hi, 6);
+    ctx.font = AXIS_FONT;
+    ctx.textAlign = "right";
+    ctx.textBaseline = "middle";
+    for (const t of ticks) {
+      const y = Math.round(ys(t)) + 0.5;
+      if (y < box.y - 1 || y > box.y + box.h + 1) continue;
+      ctx.strokeStyle = css("--grid");
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(box.x, y); ctx.lineTo(box.x + box.w, y); ctx.stroke();
+      ctx.fillStyle = css("--text-muted");
+      ctx.fillText(fmtTick(t, state.transform), box.x - 8, y);
+    }
+
+    // reference line (baseline = 100, or zero change)
+    if (tf.ref >= lo && tf.ref <= hi) {
+      const y = Math.round(ys(tf.ref)) + 0.5;
+      ctx.strokeStyle = css("--axis");
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(box.x, y); ctx.lineTo(box.x + box.w, y); ctx.stroke();
+    }
+
+    // x axis
+    ctx.strokeStyle = css("--axis");
+    ctx.beginPath();
+    ctx.moveTo(box.x, box.y + box.h + 0.5); ctx.lineTo(box.x + box.w, box.y + box.h + 0.5); ctx.stroke();
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+    ctx.fillStyle = css("--text-muted");
+    for (const t of xTicks(i0, i1, narrow ? 4 : 8)) ctx.fillText(t.label, xs(t.i), box.y + box.h + 7);
+
+    // lines — "Other" tail first and recessive, coloured slots on top
+    ctx.save();
+    ctx.beginPath(); ctx.rect(box.x, box.y - 4, box.w, box.h + 8); ctx.clip();
+    for (const s of series) {
+      if (!isOther(s.id)) continue;
+      ctx.globalAlpha = dim ? 0.12 : 1;
+      drawLine(ctx, s, i0, i1, xs, ys, css("--other"), 1);
+    }
+    for (const s of series) {
+      if (isOther(s.id)) continue;
+      ctx.globalAlpha = dim ? 0.22 : 1;
+      drawLine(ctx, s, i0, i1, xs, ys, colorOf(s.id), 2);
+    }
+    ctx.globalAlpha = 1;
+    ctx.restore();
+
+    // selective direct labels: only when every series is coloured and there are ≤ 4
+    if (!dim && labelPad > 40) {
+      const labels = series.map((s) => {
+        const last = lastPoint(s);
+        return last === null ? null : { s, y: ys(s.values[last]) };
+      }).filter(Boolean).sort((a, b) => a.y - b.y);
+      for (let k = 1; k < labels.length; k++) {
+        if (labels[k].y - labels[k - 1].y < 14) labels[k].y = labels[k - 1].y + 14;
+      }
+      ctx.textBaseline = "middle";
+      ctx.textAlign = "left";
+      ctx.font = '600 11px system-ui, -apple-system, "Segoe UI", sans-serif';
+      for (const L of labels) {
+        ctx.fillStyle = colorOf(L.s.id);
+        ctx.fillText(fitText(ctx, L.s.short, labelPad - 12),
+          box.x + box.w + 8, clamp(L.y, box.y + 6, box.y + box.h - 6));
+      }
+    }
+  }
+
+  function drawFocus(ctx, focus) {
+    ctx.save();
+    ctx.beginPath(); ctx.rect(box.x, box.y - 4, box.w, box.h + 8); ctx.clip();
+    // A sector not on the chart previews as a dashed line — "click to add".
+    if (!focus.plotted) ctx.setLineDash([6, 4]);
+    drawLine(ctx, focus.s, i0, i1, xs, ys, focus.color, 3);
+    ctx.setLineDash([]);
+    ctx.restore();
+
+    // Label the focused line wherever it ends, even with no gutter to spare.
+    const last = lastPoint(focus.s);
+    if (last === null) return;
+    ctx.textBaseline = "middle";
+    ctx.font = '600 11px system-ui, -apple-system, "Segoe UI", sans-serif';
+    const y = clamp(ys(focus.s.values[last]), box.y + 8, box.y + box.h - 8);
+    if (labelPad > 40) {
+      ctx.textAlign = "left";
+      ctx.fillStyle = focus.color;
+      ctx.fillText(fitText(ctx, focus.s.short, labelPad - 12), box.x + box.w + 8, y);
+    } else {
+      drawTag(ctx, focus.s.short, box.x + box.w - 8, y, focus.color);
+    }
+  }
+
+  const layers = {};
+  // Build the not-yet-needed layer while the browser is idle, so the first
+  // hover doesn't pay for it mid-gesture.
+  const warmLayers = () => (window.requestIdleCallback || ((f) => setTimeout(f, 250)))(() => {
+    layer(false); layer(true);
+  });
+  function layer(dim) {
+    const key = dim ? "dim" : "full";
+    if (!layers[key]) {
+      const off = document.createElement("canvas");
+      drawBase(setupCanvas(off, cssW, cssH), dim);
+      layers[key] = off;
+    }
+    return layers[key];
+  }
+
+  function drawChart() {
+    const focus = focusedSeries(series);
+    const ctx = setupCanvas(canvas, cssW, cssH);
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.drawImage(layer(!!focus), 0, 0);
+    const dpr = window.devicePixelRatio || 1;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    if (focus) drawFocus(ctx, focus);
+  }
+
+  drawChart();
+  warmLayers();
+
+  canvas.setAttribute("aria-label",
+    `Line chart, ${tf.label}, ${series.length} series, ${fmtDate(DATA.dates[i0])} to ${fmtDate(DATA.dates[i1])}. ` +
+    `Values are listed in the Table view.`);
+
+  overlayCtx = { canvas, tip, wrap, box, i0, i1, xs, ys, series, lo, hi, drawChart };
+  attachHover();
+
+  // caption + legend + notice
+  const cap = document.createElement("p");
+  cap.className = "caption";
+  cap.textContent =
+    `${tf.label} · ${state.variable === "total" ? "total" : "new"} postings` +
+    (state.smooth > 1 ? ` · ${state.smooth}-day trailing average` : "") +
+    ` · ${fmtDate(DATA.dates[i0])} – ${fmtDate(DATA.dates[i1])}` +
+    cumulNote(series, i0, i1);
+  panel.append(cap);
+
+  panel.append(buildLegend(series, i1));
+
+  const otherCount = series.filter((s) => isOther(s.id)).length;
+  if (otherCount) {
+    const n = document.createElement("p");
+    n.className = "notice";
+    n.textContent =
+      `${otherCount} more sector${otherCount > 1 ? "s are" : " is"} drawn in grey: the palette carries eight ` +
+      `distinguishable colours, so the tail is folded into “Other”. Use Small multiples or the Table to compare all of them.`;
+    panel.append(n);
+  }
+}
+
+function buildLegend(series, iLatest) {
+  const legend = document.createElement("div");
+  legend.className = "legend";
+  for (const s of series) {
+    let v = null;
+    for (let i = iLatest; i >= 0; i--) if (s.values[i] !== null && isFinite(s.values[i])) { v = s.values[i]; break; }
+    const b = document.createElement("button");
+    b.className = "lg";
+    b.title = "Remove from chart";
+    const key = document.createElement("span");
+    key.className = "lg-key";
+    key.style.background = colorOf(s.id);
+    const nm = document.createElement("span");
+    nm.className = "lg-name";
+    nm.textContent = s.name;
+    const val = document.createElement("span");
+    val.className = "lg-val";
+    val.textContent = fmtVal(v, state.transform);
+    b.append(key, nm, val);
+    b.addEventListener("click", () => toggle(s.id, false));
+    bindHover(b, s.id);
+    legend.append(b);
+  }
+  return legend;
+}
+
+// ---------------------------------------------------------------- hover / zoom
+function attachHover() {
+  const C = overlayCtx;
+  if (!C) return;
+  const { canvas, tip, wrap, box, i0, i1, xs, ys, series } = C;
+  let crosshair = null;
+  let drag = null;
+
+  const base = document.createElement("canvas");   // keep a clean copy to repaint over
+  base.width = canvas.width; base.height = canvas.height;
+  function snapshot() {
+    const b = base.getContext("2d");
+    b.setTransform(1, 0, 0, 1, 0, 0);
+    b.clearRect(0, 0, base.width, base.height);
+    b.drawImage(canvas, 0, 0);
+  }
+  snapshot();
+
+  // Emphasis changes redraw the chart itself, then the crosshair goes back on top.
+  C.refresh = () => { C.drawChart(); snapshot(); paint(); };
+
+  function nearestIndex(clientX) {
+    const r = canvas.getBoundingClientRect();
+    const px = clientX - r.left;
+    const frac = clamp((px - box.x) / box.w, 0, 1);
+    return Math.round(i0 + frac * (i1 - i0));
+  }
+
+  function paint() {
+    const dpr = window.devicePixelRatio || 1;
+    const ctx = canvas.getContext("2d");
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(base, 0, 0);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    if (drag) {
+      const a = Math.min(drag.a, drag.b), b = Math.max(drag.a, drag.b);
+      ctx.fillStyle = css("--wash");
+      ctx.fillRect(xs(a), box.y, xs(b) - xs(a), box.h);
+    }
+    if (crosshair === null) return;
+    const x = Math.round(xs(crosshair)) + 0.5;
+    ctx.strokeStyle = css("--axis");
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x, box.y); ctx.lineTo(x, box.y + box.h); ctx.stroke();
+    for (const s of series) {
+      const v = s.values[crosshair];
+      if (v === null || !isFinite(v)) continue;
+      const y = ys(v);
+      if (y < box.y - 2 || y > box.y + box.h + 2) continue;
+      ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI * 2);
+      ctx.fillStyle = colorOf(s.id); ctx.fill();
+      ctx.lineWidth = 2; ctx.strokeStyle = css("--surface-1"); ctx.stroke();   // 2px surface ring
+    }
+  }
+
+  function showTip(idx) {
+    tip.textContent = "";
+    const d = document.createElement("div");
+    d.className = "tt-date";
+    d.textContent = fmtDate(DATA.dates[idx]);
+    tip.append(d);
+    const rows = series
+      .map((s) => ({ s, v: s.values[idx] }))
+      .filter((r) => r.v !== null && isFinite(r.v))
+      .sort((a, b) => b.v - a.v)
+      .slice(0, 12);
+    for (const r of rows) {
+      const row = document.createElement("div");
+      row.className = "tt-row";
+      const k = document.createElement("span");
+      k.className = "tt-key";
+      k.style.background = colorOf(r.s.id);
+      const v = document.createElement("span");
+      v.className = "tt-val";
+      v.textContent = fmtVal(r.v, state.transform);
+      const n = document.createElement("span");
+      n.className = "tt-name";
+      n.textContent = r.s.short;                      // untrusted label → textContent
+      row.append(k, v, n);
+      tip.append(row);
+    }
+    if (series.length > rows.length) {
+      const more = document.createElement("div");
+      more.className = "tt-date";
+      more.textContent = `+${series.length - rows.length} more — see Table view`;
+      tip.append(more);
+    }
+    tip.classList.add("show");
+    const x = xs(idx);
+    const flip = x > box.w * 0.6;
+    tip.style.left = flip ? "" : x + 26 + "px";
+    tip.style.right = flip ? (wrap.clientWidth - x - 12) + "px" : "";
+    tip.style.top = box.y + 14 + "px";
+  }
+
+  canvas.addEventListener("pointermove", (e) => {
+    const idx = nearestIndex(e.clientX);
+    if (drag) drag.b = idx;
+    crosshair = idx;
+    paint(); showTip(idx);
+  });
+  canvas.addEventListener("pointerleave", () => {
+    if (drag) return;
+    crosshair = null; tip.classList.remove("show"); paint();
+  });
+  canvas.addEventListener("pointerdown", (e) => {
+    canvas.setPointerCapture(e.pointerId);
+    const idx = nearestIndex(e.clientX);
+    drag = { a: idx, b: idx };
+  });
+  canvas.addEventListener("pointerup", (e) => {
+    if (!drag) return;
+    const a = Math.min(drag.a, drag.b), b = Math.max(drag.a, drag.b);
+    drag = null;
+    if (b - a >= 5) {
+      state.from = DATA.dates[a];
+      state.to = DATA.dates[b];
+      state.preset = null;
+      render();
+    } else paint();
+  });
+  canvas.addEventListener("dblclick", () => { applyPreset("all"); render(); });
+
+  canvas.addEventListener("keydown", (e) => {
+    const step = e.shiftKey ? 30 : 1;
+    if (e.key === "ArrowRight") crosshair = clamp((crosshair ?? i0) + step, i0, i1);
+    else if (e.key === "ArrowLeft") crosshair = clamp((crosshair ?? i1) - step, i0, i1);
+    else if (e.key === "Home") crosshair = i0;
+    else if (e.key === "End") crosshair = i1;
+    else if (e.key === "Escape") { crosshair = null; tip.classList.remove("show"); paint(); return; }
+    else return;
+    e.preventDefault();
+    paint(); showTip(crosshair);
+  });
+  canvas.addEventListener("blur", () => { crosshair = null; tip.classList.remove("show"); paint(); });
+}
+
+// ================================================================ small multiples
+function renderFacets(panel) {
+  const [i0, i1] = windowIndices();
+  const ids = state.selected;
+  panel.innerHTML = "";
+
+  if (!ids.length) {
+    const p = document.createElement("p");
+    p.className = "notice";
+    p.textContent = "Pick one or more sectors on the left to plot them.";
+    panel.append(p);
+    return;
+  }
+
+  const series = computeSeries(ids, i0);
+  const tf = TRANSFORMS[state.transform];
+  const ref = computeSeries(["national"], i0)[0];
+
+  const wrap = document.createElement("div");
+  wrap.className = "chart-wrap";
+  const canvas = document.createElement("canvas");
+  wrap.append(canvas);
+  panel.append(wrap);
+
+  const cssW = wrap.clientWidth - 28;
+  const cols = clamp(Math.floor(cssW / 230), 1, 5);
+  const cw = cssW / cols;
+  const ch = 118;
+  const rows = Math.ceil(series.length / cols);
+  const cssH = rows * ch + 6;
+
+  const shared = state.sharedY ? extent(series.concat([ref]), i0, i1) : null;
+
+  const cellOf = (k) => ({ cx: (k % cols) * cw, cy: Math.floor(k / cols) * ch });
+
+  function drawPanel(ctx, s, k, dim, focused) {
+    const { cx, cy } = cellOf(k);
+    const box = { x: cx + 8, y: cy + 30, w: cw - 20, h: ch - 46 };
+
+    if (focused) {
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(cx + 2, cy + 2, cw - 4, ch - 4, 8);
+      else ctx.rect(cx + 2, cy + 2, cw - 4, ch - 4);
+      ctx.fillStyle = css("--wash");
+      ctx.fill();
+    }
+    ctx.globalAlpha = dim ? 0.3 : 1;
+
+    const [lo, hi] = shared || extent([s], i0, i1);
+    const { xs, ys } = makeScales(box, i0, i1, lo, hi);
+
+    // title + latest value
+    let last = null;
+    for (let i = i1; i >= i0; i--) if (s.values[i] !== null && isFinite(s.values[i])) { last = s.values[i]; break; }
+    ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+    ctx.fillStyle = css("--text-primary");
+    ctx.font = '600 12px system-ui, -apple-system, "Segoe UI", sans-serif';
+    ctx.fillText(fitText(ctx, s.short, box.w - 56), box.x, cy + 16);
+    ctx.textAlign = "right";
+    ctx.fillStyle = last === null ? css("--text-muted")
+      : tf.pct ? (last >= 0 ? css("--good") : css("--bad")) : css("--text-primary");
+    ctx.fillText(fmtVal(last, state.transform), box.x + box.w, cy + 16);
+
+    // reference line
+    if (tf.ref >= lo && tf.ref <= hi) {
+      const y = Math.round(ys(tf.ref)) + 0.5;
+      ctx.strokeStyle = css("--grid"); ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(box.x, y); ctx.lineTo(box.x + box.w, y); ctx.stroke();
+    }
+    ctx.save();
+    ctx.beginPath(); ctx.rect(box.x, box.y - 3, box.w, box.h + 6); ctx.clip();
+    if (s.id !== "national") drawLine(ctx, ref, i0, i1, xs, ys, css("--other"), 1);   // recessive context
+    drawLine(ctx, s, i0, i1, xs, ys, css("--series-1"), focused ? 2.5 : 2);
+    ctx.restore();
+
+    // y extremes, tiny — once per row when the scale is shared, else on every panel
+    if (!shared || k % cols === 0) {
+      ctx.font = AXIS_FONT;
+      ctx.fillStyle = css("--text-muted");
+      ctx.textAlign = "left"; ctx.textBaseline = "top";
+      ctx.fillText(fmtTick(hi, state.transform), box.x, box.y - 2);
+      ctx.textBaseline = "bottom";
+      ctx.fillText(fmtTick(lo, state.transform), box.x, box.y + box.h + 12);
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  const layers = {};
+  // Build the not-yet-needed layer while the browser is idle, so the first
+  // hover doesn't pay for it mid-gesture.
+  const warmLayers = () => (window.requestIdleCallback || ((f) => setTimeout(f, 250)))(() => {
+    layer(false); layer(true);
+  });
+  function layer(dim) {
+    const key = dim ? "dim" : "full";
+    if (!layers[key]) {
+      const off = document.createElement("canvas");
+      const ctx = setupCanvas(off, cssW, cssH);
+      ctx.font = AXIS_FONT;
+      series.forEach((s, k) => drawPanel(ctx, s, k, dim, false));
+      layers[key] = off;
+    }
+    return layers[key];
+  }
+
+  function drawFacets() {
+    const k = series.findIndex((s) => s.id === state.hover);
+    const ctx = setupCanvas(canvas, cssW, cssH);
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.drawImage(layer(k !== -1), 0, 0);
+    const dpr = window.devicePixelRatio || 1;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    if (k === -1) return;
+    // Repaint just the focused cell at full strength over the dimmed layer.
+    const { cx, cy } = cellOf(k);
+    ctx.clearRect(cx, cy, cw, ch);
+    ctx.font = AXIS_FONT;
+    drawPanel(ctx, series[k], k, false, true);
+  }
+
+  drawFacets();
+  warmLayers();
+  facetCtx = { refresh: drawFacets };
+
+  canvas.setAttribute("role", "img");
+  canvas.setAttribute("aria-label",
+    `${series.length} small-multiple line charts, ${tf.label}, ${fmtDate(DATA.dates[i0])} to ${fmtDate(DATA.dates[i1])}. ` +
+    `Values are listed in the Table view.`);
+
+  const cap = document.createElement("p");
+  cap.className = "caption";
+  cap.textContent =
+    `${tf.label} · ${state.variable === "total" ? "total" : "new"} postings` +
+    (state.smooth > 1 ? ` · ${state.smooth}-day trailing average` : "") +
+    ` · ${fmtDate(DATA.dates[i0])} – ${fmtDate(DATA.dates[i1])}` +
+    ` · grey line in each panel is the national index` +
+    (state.sharedY ? " · shared y-axis" : " · each panel scaled to its own range") +
+    cumulNote(series, i0, i1);
+  panel.append(cap);
+}
+
+// ================================================================ table view
+const COLUMNS = [
+  { key: "name",  label: "Sector",        num: false },
+  { key: "last",  label: "Latest",        num: true },
+  { key: "base",  label: "vs Feb 2020",   num: true, pct: true },
+  { key: "m1",    label: "1 mo",          num: true, pct: true },
+  { key: "m3",    label: "3 mo",          num: true, pct: true },
+  { key: "m12",   label: "12 mo",         num: true, pct: true },
+  { key: "avg",   label: "Cumulative %",  num: true, pct: true },
+  { key: "min",   label: "Range low",     num: true },
+  { key: "max",   label: "Range high",    num: true },
+];
+
+function tableRows() {
+  const [i0, i1] = windowIndices();
+  const ids = state.selected.length ? state.selected : DATA.series.map((s) => s.id);
+  return ids.map((id) => {
+    const s = byId.get(id);
+    const lvl = smoothed(s[state.variable], state.smooth);
+    const disp = transformed(lvl, state.transform, i0);
+    const at = (i) => (i >= 0 && lvl[i] !== null && isFinite(lvl[i]) ? lvl[i] : null);
+    const pctChg = (lag) => {
+      const a = at(i1), b = at(i1 - lag);
+      return a === null || b === null ? null : (a / b - 1) * 100;
+    };
+    let min = Infinity, max = -Infinity;
+    for (let i = i0; i <= i1; i++) {
+      const v = disp[i];
+      if (v === null || !isFinite(v)) continue;
+      if (v < min) min = v;
+      if (v > max) max = v;
+    }
+    let last = null;
+    for (let i = i1; i >= i0; i--) if (disp[i] !== null && isFinite(disp[i])) { last = disp[i]; break; }
+
+    // Area between the level and the 100 baseline over the window, divided by the
+    // days it spans — the same trapezoid the chart draws. Since the baseline is
+    // exactly 100 this ratio already IS the percent above/below a flat-100
+    // counterfactual. Always on the level, whatever measure is selected, so the
+    // column means one thing.
+    let area = 0, prevV = null, spanDays = 0;
+    for (let i = i0; i <= i1; i++) {
+      const v = lvl[i];
+      if (v === null || !isFinite(v)) continue;
+      if (prevV !== null) { area += ((prevV - 100) + (v - 100)) / 2; spanDays++; }
+      prevV = v;
+    }
+
+    return {
+      id, name: s.name,
+      avg: spanDays ? area / spanDays : null,
+      last,
+      base: at(i1) === null ? null : at(i1) - 100,
+      m1: pctChg(30), m3: pctChg(91), m12: pctChg(365),
+      min: isFinite(min) ? min : null,
+      max: isFinite(max) ? max : null,
+      selected: state.selected.includes(id),
+    };
+  });
+}
+
+function renderTable(panel) {
+  const [i0, i1] = windowIndices();
+  panel.innerHTML = "";
+  const rows = tableRows();
+  const { key, dir } = state.sort;
+  rows.sort((a, b) => {
+    if (key === "name") return dir * a.name.localeCompare(b.name);
+    const av = a[key], bv = b[key];
+    if (av === null) return 1;
+    if (bv === null) return -1;
+    return dir * (av - bv);
+  });
+
+  const wrap = document.createElement("div");
+  wrap.className = "tablewrap";
+  const table = document.createElement("table");
+
+  const thead = document.createElement("thead");
+  const htr = document.createElement("tr");
+  for (const c of COLUMNS) {
+    const th = document.createElement("th");
+    th.textContent = c.label;
+    th.scope = "col";
+    if (key === c.key) {
+      const a = document.createElement("span");
+      a.className = "arrow";
+      a.textContent = dir === 1 ? " ↑" : " ↓";
+      th.append(a);
+    }
+    th.addEventListener("click", () => {
+      state.sort = key === c.key ? { key, dir: -dir } : { key: c.key, dir: c.key === "name" ? 1 : -1 };
+      render();
+    });
+    htr.append(th);
+  }
+  thead.append(htr);
+
+  const tbody = document.createElement("tbody");
+  for (const r of rows) {
+    const tr = document.createElement("tr");
+    for (const c of COLUMNS) {
+      const td = document.createElement("td");
+      if (c.key === "name") {
+        td.className = "name";
+        const k = document.createElement("span");
+        k.className = "key";
+        k.style.background = r.selected ? colorOf(r.id) : "transparent";
+        const t = document.createElement("span");
+        t.textContent = r.name;                      // untrusted label → textContent
+        td.append(k, t);
+      } else {
+        const v = r[c.key];
+        td.textContent = v === null || !isFinite(v) ? "—"
+          : c.pct ? (v > 0 ? "+" : "") + fmtNum(v, 1) + "%"
+          : fmtVal(v, state.transform);
+        if (c.pct && v !== null) td.className = v > 0 ? "pos" : v < 0 ? "neg" : "";
+      }
+      tr.append(td);
+    }
+    tbody.append(tr);
+  }
+  table.append(thead, tbody);
+  wrap.append(table);
+  panel.append(wrap);
+
+  const cap = document.createElement("p");
+  cap.className = "caption";
+  cap.textContent =
+    `Latest / Range low / Range high use the selected measure — ${TRANSFORMS[state.transform].label}. ` +
+    `“vs Feb 2020” and the 1/3/12-month columns are always percentage changes in the index level. ` +
+    `“Cumulative %” is how far total postings ran above or below a counterfactual index held flat at 100 ` +
+    `across the whole window, so it ranks sectors by sustained excess, not by where they stand today. ` +
+    `${state.variable === "total" ? "Total" : "New"} postings` +
+    (state.smooth > 1 ? `, ${state.smooth}-day trailing average` : "") +
+    `, window ${fmtDate(DATA.dates[i0])} – ${fmtDate(DATA.dates[i1])}` +
+    (state.selected.length ? "." : ". No sectors selected, so all are listed.");
+  panel.append(cap);
+}
+
+// ================================================================ picker
+function renderPicker() {
+  const list = $("#grouplist");
+  list.innerHTML = "";
+  const q = state.search.trim().toLowerCase();
+  const groups = new Map();
+  for (const s of DATA.series) {
+    if (q && !s.name.toLowerCase().includes(q)) continue;
+    if (!groups.has(s.group)) groups.set(s.group, []);
+    groups.get(s.group).push(s);
+  }
+  for (const gname of DATA.groups) {
+    const items = groups.get(gname);
+    if (!items || !items.length) continue;
+    const g = document.createElement("div");
+    g.className = "group";
+    const head = document.createElement("div");
+    head.className = "group-head";
+    const h = document.createElement("h3");
+    h.textContent = gname;
+    const allOn = items.every((s) => state.selected.includes(s.id));
+    const b = document.createElement("button");
+    b.className = "btn small";
+    b.textContent = allOn ? "none" : "all";
+    b.addEventListener("click", () => {
+      for (const s of items) {
+        const at = state.selected.indexOf(s.id);
+        if (allOn && at !== -1) state.selected.splice(at, 1);
+        if (!allOn && at === -1) state.selected.push(s.id);
+      }
+      reassignSlots();
+      render();
+    });
+    head.append(h, b);
+    g.append(head);
+
+    for (const s of items) {
+      const on = state.selected.includes(s.id);
+      const lab = document.createElement("label");
+      lab.className = "opt" + (on ? " on" : "");
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.checked = on;
+      cb.addEventListener("change", () => toggle(s.id, cb.checked));
+      const sw = document.createElement("span");
+      sw.className = "swatch";
+      if (on) sw.style.background = colorOf(s.id);
+      const nm = document.createElement("span");
+      nm.className = "nm";
+      nm.textContent = s.name;                        // untrusted label → textContent
+      lab.append(cb, sw, nm);
+      bindHover(lab, s.id);
+      g.append(lab);
+    }
+    list.append(g);
+  }
+  $("#pickcount").textContent = `${state.selected.length} of ${DATA.series.length}`;
+}
+
+// ================================================================ chrome
+function buildSegs() {
+  const mk = (host, items, get, set) => {
+    host.innerHTML = "";
+    for (const it of items) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.textContent = it.label;
+      b.setAttribute("aria-pressed", String(get() === it.id));
+      b.addEventListener("click", () => { set(it.id); render(); });
+      host.append(b);
+    }
+  };
+  mk($("#range-presets"), RANGES, () => state.preset, (id) => applyPreset(id));
+  mk($("#variable"), VARIABLES, () => state.variable, (id) => { state.variable = id; });
+  mk($("#view"), VIEWS, () => state.view, (id) => { state.view = id; });
+}
+
+function syncControls() {
+  $("#transform").value = state.transform;
+  $("#smooth").value = String(state.smooth);
+  const [i0, i1] = windowIndices();
+  $("#from").value = DATA.dates[i0];
+  $("#to").value = DATA.dates[i1];
+  $("#from").min = $("#to").min = DATA.dates[0];
+  $("#from").max = $("#to").max = DATA.dates[DATA.dates.length - 1];
+  $("#sharedy-wrap").hidden = state.view !== "facets";
+  $("#sharedy").checked = state.sharedY;
+  $("#hint").textContent = state.view === "overlay"
+    ? "Hover a sector to highlight it · drag to zoom · double-click to reset"
+    : state.view === "facets" ? "Hover a sector to highlight its panel · national index in grey"
+    : "Click a column heading to sort";
+}
+
+let renderQueued = false;
+function render() {
+  if (renderQueued) return;
+  renderQueued = true;
+  requestAnimationFrame(() => {
+    renderQueued = false;
+    buildSegs();
+    syncControls();
+    renderPicker();
+    const panel = $("#panel");
+    overlayCtx = facetCtx = null;         // the old canvases are about to be discarded
+    if (state.view === "overlay") renderOverlay(panel);
+    else if (state.view === "facets") renderFacets(panel);
+    else renderTable(panel);
+    markHoverRows();                      // the lists were just rebuilt
+  });
+}
+
+// ---------------------------------------------------------------- CSV export
+function downloadCSV() {
+  const [i0, i1] = windowIndices();
+  const ids = state.selected.length ? state.selected : DATA.series.map((s) => s.id);
+  const series = computeSeries(ids, i0);
+  const q = (s) => (/[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s);
+  const lines = ["date," + series.map((s) => q(s.name)).join(",")];
+  for (let i = i0; i <= i1; i++) {
+    lines.push(DATA.dates[i] + "," + series.map((s) => {
+      const v = s.values[i];
+      return v === null || !isFinite(v) ? "" : v.toFixed(2);
+    }).join(","));
+  }
+  const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `indeed-postings-${state.variable}-${state.transform}-${DATA.dates[i0]}-to-${DATA.dates[i1]}.csv`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+// ---------------------------------------------------------------- live refresh
+function parseCSV(text) {
+  const rows = [];
+  let row = [], field = "", quoted = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (quoted) {
+      if (c === '"') { if (text[i + 1] === '"') { field += '"'; i++; } else quoted = false; }
+      else field += c;
+    } else if (c === '"') quoted = true;
+    else if (c === ",") { row.push(field); field = ""; }
+    else if (c === "\n") { row.push(field); rows.push(row); row = []; field = ""; }
+    else if (c !== "\r") field += c;
+  }
+  if (field || row.length) { row.push(field); rows.push(row); }
+  return rows;
+}
+
+function toObjects(rows) {
+  const head = rows[0];
+  return rows.slice(1).filter((r) => r.length === head.length)
+    .map((r) => Object.fromEntries(head.map((h, i) => [h, r[i]])));
+}
+
+async function refreshFromSource() {
+  const btn = $("#refresh");
+  btn.disabled = true;
+  const original = btn.textContent;
+  btn.textContent = "Downloading…";
+  $("#panel").classList.add("loading");          // hold the previous render, no skeleton
+  try {
+    const [aggTxt, secTxt] = await Promise.all([
+      fetch(`${CSV_BASE}/aggregate_job_postings_US.csv`).then((r) => r.text()),
+      fetch(`${CSV_BASE}/job_postings_by_sector_US.csv`).then((r) => r.text()),
+    ]);
+    btn.textContent = "Parsing…";
+    const VAR = { "total postings": "total", "new postings": "new" };
+    const national = new Map(), sectors = new Map();
+    for (const r of toObjects(parseCSV(aggTxt))) {
+      const k = VAR[r.variable];
+      if (!k) continue;
+      if (!national.has(r.date)) national.set(r.date, {});
+      national.get(r.date)[k] = r.indeed_job_postings_index_SA === "" ? null : +r.indeed_job_postings_index_SA;
+    }
+    for (const r of toObjects(parseCSV(secTxt))) {
+      const k = VAR[r.variable];
+      if (!k) continue;
+      if (!sectors.has(r.display_name)) sectors.set(r.display_name, new Map());
+      const m = sectors.get(r.display_name);
+      if (!m.has(r.date)) m.set(r.date, {});
+      m.get(r.date)[k] = r.indeed_job_postings_index === "" ? null : +r.indeed_job_postings_index;
+    }
+    const dates = [...national.keys()].sort();
+    const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    const meta = new Map(DATA.series.map((s) => [s.name, s]));
+    const pack = (m) => ({
+      total: dates.map((d) => (m.get(d) || {}).total ?? null),
+      new: dates.map((d) => (m.get(d) || {}).new ?? null),
+    });
+    const series = [{
+      id: "national", name: "National (all sectors)", group: "Overall", short: "National",
+      ...pack(national),
+    }];
+    for (const name of [...sectors.keys()].sort()) {
+      const prev = meta.get(name);
+      series.push({
+        id: slug(name), name, group: prev ? prev.group : "Other",
+        short: prev ? prev.short : name, ...pack(sectors.get(name)),
+      });
+    }
+    const groups = [...new Set(DATA.groups.concat(series.map((s) => s.group)))];
+    installData({ ...DATA, dates, series, groups, generated: new Date().toISOString().slice(0, 10) });
+    btn.textContent = "Updated ✓";
+    setTimeout(() => { btn.textContent = original; btn.disabled = false; }, 2200);
+  } catch (err) {
+    console.error(err);
+    btn.textContent = "Refresh failed";
+    setTimeout(() => { btn.textContent = original; btn.disabled = false; }, 2600);
+  } finally {
+    $("#panel").classList.remove("loading");
+  }
+}
+
+// ---------------------------------------------------------------- boot
+function installData(payload) {
+  DATA = payload;
+  byId = new Map(DATA.series.map((s) => [s.id, s]));
+  times = DATA.dates.map((d) => Date.parse(d + "T00:00:00Z"));
+  const live = new Set(byId.keys());
+  state.selected = state.selected.filter((id) => live.has(id));
+  if (!state.selected.length) state.selected = DEFAULT_IDS.filter((id) => live.has(id));
+  reassignSlots();
+  if (state.preset) applyPreset(state.preset);
+  else {
+    if (state.from && state.from < DATA.dates[0]) state.from = DATA.dates[0];
+    if (state.to && state.to > DATA.dates[DATA.dates.length - 1]) state.to = DATA.dates[DATA.dates.length - 1];
+  }
+  $("#meta").textContent =
+    `Data through ${fmtDate(DATA.dates[DATA.dates.length - 1])} · ${DATA.series.length - 1} sectors.`;
+  render();
+}
+
+function wire() {
+  $("#transform").addEventListener("change", (e) => { state.transform = e.target.value; render(); });
+  $("#smooth").addEventListener("change", (e) => { state.smooth = +e.target.value; render(); });
+  $("#sharedy").addEventListener("change", (e) => { state.sharedY = e.target.checked; render(); });
+  $("#search").addEventListener("input", (e) => { state.search = e.target.value; renderPicker(); });
+  for (const id of ["from", "to"]) {
+    $("#" + id).addEventListener("change", (e) => {
+      state[id] = e.target.value || null;
+      state.preset = null;
+      render();
+    });
+  }
+  for (const b of document.querySelectorAll("[data-preset]")) {
+    b.addEventListener("click", () => {
+      const p = b.dataset.preset;
+      if (p === "all") state.selected = DATA.series.map((s) => s.id);
+      else if (p === "none") state.selected = [];
+      else state.selected = DEFAULT_IDS.filter((id) => byId.has(id));
+      reassignSlots();
+      render();
+    });
+  }
+  $("#csv").addEventListener("click", downloadCSV);
+  $("#refresh").addEventListener("click", refreshFromSource);
+  $("#theme").addEventListener("click", () => {
+    const cur = document.documentElement.dataset.theme;
+    const dark = cur === "dark" || (cur === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+    document.documentElement.dataset.theme = dark ? "light" : "dark";
+    render();
+  });
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+    if (document.documentElement.dataset.theme === "auto") render();
+  });
+  let t;
+  addEventListener("resize", () => { clearTimeout(t); t = setTimeout(render, 120); });
+}
+
+fetch("data.json")
+  .then((r) => { if (!r.ok) throw new Error(`data.json: HTTP ${r.status}`); return r.json(); })
+  .then((payload) => { wire(); installData(payload); })
+  .catch((err) => {
+    console.error(err);
+    $("#panel").innerHTML = "";
+    const p = document.createElement("p");
+    p.className = "notice";
+    p.textContent = `Could not load data.json (${err.message}). Run "python build_data.py" in this folder, then serve it over http:// rather than opening the file directly.`;
+    $("#panel").append(p);
+  });
+</script>
+</body>
+</html>
