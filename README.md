@@ -58,7 +58,7 @@ properly; the build prints a note when it sees one).
 |---|---|
 | Date range | `All / 5Y / 3Y / 12M / 6M / YTD`, or type exact from/to dates |
 | Postings | **Total** postings vs **New** postings (on Indeed ≤ 7 days) |
-| Measure | index level · rebased to range start · % vs 1 / 3 / 12 months ago · cumulative % vs a flat 100 |
+| Measure | index level · rebased to range start · % vs 1 / 3 / 12 months ago · cumulative % vs a flat 100 · cumulative vs national |
 | Smoothing | as published (7-day) · 28 · 91 · 182-day trailing average |
 
 The y-axis is always linear. A log scale was tried and dropped: an index anchored at
@@ -110,6 +110,31 @@ Three things to hold in mind, all of them real:
 
 Integrating the raw index instead of its deviation from 100 would be useless: the
 constant baseline dominates and all 42 sectors land within 1.69× of each other.
+
+### Cumulative vs national
+
+The same running integral, but each sector divided by the **national** integral on the
+same day, with national pinned at 100 — so the reading is the percent above or below
+the national average. If national has accumulated 12,000 by a given date and a sector
+14,400, the sector shows **+20%**.
+
+Because both integrals span the same days, the ratio reduces to the ratio of running
+*means*: "+20%" says this sector's average index since the window start is 20% above
+national's over the same span. National reads exactly 0% by construction, which makes
+it the reference line.
+
+This is the measure that strips out the economy-wide cycle. Cumulative-vs-flat-100
+tells you a sector rose; this tells you whether it rose *more than the market did*.
+Software Development is the clearest case — it ran ahead of national through the boom
+and has fallen behind since:
+
+| | 2020-06 | 2022-06 | 2024-06 | 2026-07 |
+|---|---:|---:|---:|---:|
+| Software Development vs national | +2.98% | +15.63% | −1.78% | −11.56% |
+
+Over the full window the spread runs from Physicians & Surgeons at **+36.3%** to Media
+& Communications at **−19.6%**. Note the first day is blank (0 ÷ 0), so accumulation
+starts one day after the window begins; the caption names the exact date.
 
 **Views:**
 

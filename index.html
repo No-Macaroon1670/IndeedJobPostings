@@ -268,6 +268,7 @@
         <option value="chg3m">Change vs 3 months ago (%)</option>
         <option value="chg12m">Change vs 12 months ago (%)</option>
         <option value="cumul">Cumulative % vs a flat 100 baseline</option>
+        <option value="natCum">Cumulative vs national average (%)</option>
       </select>
     </div>
     <div class="field">
@@ -354,7 +355,11 @@ const TRANSFORMS = {
   // Running area between the line and the 100 baseline, divided by the days it
   // spans. Because the counterfactual baseline is exactly 100, area/(100*days)*100
   // reduces to area/days — so this reads directly as a percent.
-  cumul:  { label: "Cumulative % vs a flat 100",   pct: true,  ref: 0 },
+  cumul:  { label: "Cumulative % vs a flat 100",   pct: true,  ref: 0, cumulative: true },
+  // Sector cumulative ÷ national cumulative, on the same day. National reads 0 by
+  // construction, so this strips the economy-wide cycle and leaves sector-specific
+  // over/under-performance.
+  natCum: { label: "Cumulative vs national",       pct: true,  ref: 0, cumulative: true, vsNational: true },
 };
 const DEFAULT_IDS = ["national", "software-development", "banking-finance", "nursing", "retail"];
 
@@ -428,11 +433,45 @@ function smoothed(raw, win) {
   return out;
 }
 
-/** Apply the measure transform to a smoothed level series. i0 = first visible index. */
-function transformed(level, tf, i0) {
+/** Running trapezoid of the level itself — area under the curve, not against 100. */
+function runningIntegral(level, i0) {
+  const out = new Array(level.length).fill(null);
+  let acc = 0, prev = null;
+  for (let i = i0; i < level.length; i++) {
+    const v = level[i];
+    if (v === null || !isFinite(v)) continue;
+    if (prev !== null) acc += (prev + v) / 2;
+    out[i] = acc;
+    prev = v;
+  }
+  return out;
+}
+
+/** The national running integral, for measures that are relative to it. */
+function nationalIntegral(i0) {
+  if (!TRANSFORMS[state.transform].vsNational) return null;
+  const nat = byId.get("national");
+  return nat ? runningIntegral(smoothed(nat[state.variable], state.smooth), i0) : null;
+}
+
+/**
+ * Apply the measure transform to a smoothed level series. i0 = first visible index.
+ * natCum is the national running integral, needed only by the vs-national measure.
+ */
+function transformed(level, tf, i0, natCum) {
   const n = level.length;
   const out = new Array(n).fill(null);
   if (tf === "level") return level;
+  if (tf === "natCum") {
+    // Ratio of the two running integrals, which reduces to the ratio of running
+    // means: "this sector's average index since the start is x% above national's".
+    const own = runningIntegral(level, i0);
+    for (let i = i0; i < n; i++) {
+      const a = own[i], b = natCum ? natCum[i] : null;
+      out[i] = a === null || b === null || b === 0 ? null : (a / b - 1) * 100;
+    }
+    return out;
+  }
   if (tf === "cumul") {
     // Trapezoid rule on a 1-day grid from the first plotted day, divided by the days
     // spanned so far: "cumulative postings ran x% above/below a flat-100 baseline".
@@ -468,7 +507,7 @@ function transformed(level, tf, i0) {
  * window start. Say so rather than letting the reader assume otherwise.
  */
 function cumulNote(seriesList, i0, i1) {
-  if (state.transform !== "cumul") return "";
+  if (!TRANSFORMS[state.transform].cumulative) return "";
   let first = null;
   for (const s of seriesList) {
     for (let i = i0; i <= i1; i++) {
@@ -482,10 +521,11 @@ function cumulNote(seriesList, i0, i1) {
 
 /** Cached per-render series computation. */
 function computeSeries(ids, i0) {
+  const natCum = nationalIntegral(i0);   // null unless the measure needs it
   return ids.map((id) => {
     const s = byId.get(id);
     const lvl = smoothed(s[state.variable], state.smooth);
-    return { id, name: s.name, short: s.short, values: transformed(lvl, state.transform, i0) };
+    return { id, name: s.name, short: s.short, values: transformed(lvl, state.transform, i0, natCum) };
   });
 }
 
@@ -1235,10 +1275,11 @@ const COLUMNS = [
 function tableRows() {
   const [i0, i1] = windowIndices();
   const ids = state.selected.length ? state.selected : DATA.series.map((s) => s.id);
+  const natCum = nationalIntegral(i0);
   return ids.map((id) => {
     const s = byId.get(id);
     const lvl = smoothed(s[state.variable], state.smooth);
-    const disp = transformed(lvl, state.transform, i0);
+    const disp = transformed(lvl, state.transform, i0, natCum);
     const at = (i) => (i >= 0 && lvl[i] !== null && isFinite(lvl[i]) ? lvl[i] : null);
     const pctChg = (lag) => {
       const a = at(i1), b = at(i1 - lag);
